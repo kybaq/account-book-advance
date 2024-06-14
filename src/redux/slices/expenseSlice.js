@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+// Json-server 로 이전할 것
 const fakeData = [
   {
     id: "25600f72-56b4-41a7-a9c2-47358580e2f1",

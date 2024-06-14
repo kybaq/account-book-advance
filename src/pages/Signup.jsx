@@ -1,24 +1,56 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
+import Toasts from "../components/Toasts";
 
 function SignUp() {
   const idRef = useRef(null);
   const passwordRef = useRef(null);
+  const nicknameRef = useRef(null);
 
-  const onHandleSubmit = (evt) => {
+  const [isToastOpen, setIsToastOpen] = useState(false);
+
+  const onHandleSubmit = async (evt) => {
     evt.preventDefault();
 
-    console.log(idRef.current.value, passwordRef.current.value);
+    const id = idRef.current.value;
+    const password = passwordRef.current.value;
+    const nickname = nicknameRef.current.value;
+
+    if (!id || !password || !nickname) {
+      setIsToastOpen(true);
+      return;
+    } else {
+      setIsToastOpen(false);
+      try {
+        const response = await axios.post(
+          "https://moneyfulpublicpolicy.co.kr/register",
+          {
+            id,
+            password,
+            nickname,
+          }
+        );
+
+        const data = response.data;
+
+        if (data.success) {
+          alert("회원가입이 정상적으로 처리됐습니다.");
+          navigate("/login");
+        } else alert("회원가입 실패, 다시 시도해주세요.");
+      } catch (err) {
+        console.error("회원가입 오류", err);
+        alert("회원가입 실패, 다시 시도해주세요.");
+      }
+    }
   };
 
   return (
     <section>
-      SignUp
-      <Link to="/">홈</Link>
+      <h2>회원가입</h2>
       <div>
         <Form onSubmit={onHandleSubmit}>
           {/* 하나의 input 을 Group 으로 감싸줌 */}
@@ -36,11 +68,9 @@ function SignUp() {
                 type="text"
                 placeholder="아이디를 입력해주세요"
                 ref={idRef}
-                onChange={(evt) => {
-                  idRef.current.value = evt.target.value;
-                }}
                 minLength={4}
                 maxLength={10}
+                // NOTE: 길이 유효성 검사 가능하게 만들기
               />
             </FloatingLabel>
           </Form.Group>
@@ -55,10 +85,7 @@ function SignUp() {
               <Form.Control
                 type="text"
                 placeholder="비밀번호를 입력해주세요"
-                ref={idRef}
-                onChange={(evt) => {
-                  idRef.current.value = evt.target.value;
-                }}
+                ref={passwordRef}
                 minLength={4}
                 maxLength={15}
               />
@@ -76,10 +103,7 @@ function SignUp() {
                 <Form.Control
                   type="text"
                   placeholder="닉네임을 입력해주세요"
-                  ref={idRef}
-                  onChange={(evt) => {
-                    idRef.current.value = evt.target.value;
-                  }}
+                  ref={nameRef}
                   minLength={1}
                   maxLength={10}
                 />
@@ -102,6 +126,7 @@ function SignUp() {
           </Link>
         </Form>
       </div>
+      <Toasts isToastOpen={isToastOpen} />
     </section>
   );
 }

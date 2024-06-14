@@ -1,18 +1,52 @@
-import React, { useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
+import Toasts from "../components/Toasts";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 
 function Login() {
+  const [isToastOpen, setIsToastOpen] = useState(false);
   const idRef = useRef(null);
   const passwordRef = useRef(null);
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const onHandleSubmit = (evt) => {
+  const onHandleSubmit = async (evt) => {
     evt.preventDefault();
 
-    console.log(idRef.current.value, passwordRef.current.value);
+    const id = idRef.current.value;
+    const password = passwordRef.current.value;
+
+    if (!idRef.current.value || !passwordRef.current.value) {
+      setIsToastOpen(true);
+      return;
+    } else {
+      setIsToastOpen(false);
+    }
+
+    try {
+      const response = await axios.post(
+        "https://moneyfulpublicpolicy.co.kr/login",
+        {
+          id,
+          password,
+        }
+      );
+
+      const data = response.data;
+      console.log(data);
+      if (data.success) {
+        login(data.accessToken);
+        navigate("/");
+      } else alert("로그인 실패, 다시 시도해주세요");
+    } catch (err) {
+      console.error("로그인 오류", err);
+      alert("아이디나 비밀번호를 올바르게 입력해주세요");
+    }
   };
 
   return (
@@ -36,11 +70,14 @@ function Login() {
                 type="text"
                 placeholder="아이디를 입력해주세요"
                 ref={idRef}
-                onChange={(evt) => {
-                  idRef.current.value = evt.target.value;
-                }}
+                minLength={4}
+                maxLength={10}
+                // NOTE: 길이 유효성 검사 가능하게 만들기
               />
             </FloatingLabel>
+            <Form.Text className="text-muted">
+              아이디는 최소 4자 부터, 최대 10자까지 입력 가능합니다.
+            </Form.Text>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formBasicPassword">
@@ -51,16 +88,15 @@ function Login() {
               className="mb-3"
             >
               <Form.Control
-                type="text"
+                type="password"
                 placeholder="비밀번호를 입력해주세요"
-                ref={idRef}
-                onChange={(evt) => {
-                  idRef.current.value = evt.target.value;
-                }}
+                ref={passwordRef}
+                minLength={4}
+                maxLength={15}
               />
             </FloatingLabel>
             <Form.Text className="text-muted">
-              회원님이 입력하신 정보는 외부에 공유하지 않습니다.
+              비밀번호는 최소 4자, 최대 15자까지 입력 가능합니다.
             </Form.Text>
           </Form.Group>
           {/* <Form.Group className="mb-3" controlId="formBasicCheckbox">
@@ -76,6 +112,7 @@ function Login() {
           </Link>
         </Form>
       </div>
+      <Toasts isToastOpen={isToastOpen} />
     </section>
   );
 }
